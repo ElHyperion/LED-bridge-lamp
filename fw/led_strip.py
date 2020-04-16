@@ -32,3 +32,21 @@ class LedStrip():
 
         # TODO Remove write from here and make a propper LED_strip class like the Display class
         cls._np.write()
+
+    # Set the colour of a specified LED band
+    @classmethod
+    def led_band(cls, colour, left, right):
+        brightness = Config.brightness() / 100
+        col = (int(colour[0] * brightness),
+               int(colour[1] * brightness),
+               int(colour[2] * brightness))
+        for i in range(LED_COUNT):
+            if left <= i < right:
+                cls._np[i] = col
+                cls._np[LED_TOTAL - i - 1] = col
+            else:
+                cls._np[i] = (0, 0, 0)
+                cls._np[LED_TOTAL - i - 1] = (0, 0, 0)
+
+        # TODO Remove write from here and make a propper LED_strip class like the Display class
+        cls._np.write()

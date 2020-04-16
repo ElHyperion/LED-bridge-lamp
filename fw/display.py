@@ -174,11 +174,11 @@ class Display():
         cls._items.append(_link)
 
     @classmethod
-    def add_slider(cls, label: str, height: int, max_val: int, default_value=0,
-                   val_inc=1, on_change=None, on_focus=None):
+    def add_slider(cls, label: str, height: int, min_val: int, max_val: int,
+                   default_value=0, val_inc=1, on_change=None, on_focus=None):
         top = cls._get_new_pos()
-        _slider = _Slider(top, 128, label, height, max_val, default_value,
-                          val_inc, on_change, on_focus)
+        _slider = _Slider(top, 128, label, height, min_val, max_val,
+                          default_value, val_inc, on_change, on_focus)
         cls._items.append(_slider)
 
     @classmethod
@@ -288,11 +288,12 @@ class _Link(_Element):
 
 
 class _Slider(_Element):
-    def __init__(self, top, scr_width, label, height, max_val, default_value,
-                 val_inc, on_change, on_focus):
+    def __init__(self, top, scr_width, label, height, min_val, max_val,
+                 default_value, val_inc, on_change, on_focus):
         super(_Slider, self).__init__(top, 14, True)
         self._label = label
         self._height = height
+        self._min_val = min_val
         self._max_val = max_val
         self._value = default_value
         self._val_inc = val_inc  # Increase / Decrease the value by this
@@ -300,38 +301,45 @@ class _Slider(_Element):
         self._on_focus = on_focus  # On focus / unfocus event
         self._left = 9 + len(self._label) * 8 + (1 if len(self._label) > 0 else 0)
         self._width = scr_width - self._left
-        self._recalculate()
+        self._centered = bool(max_val == abs(min_val))
+        if self._centered:
+            self._middle = self._left + self._width // 2
+        self._val_diff = max_val + abs(min_val)
+        self._recalculate_bar()
 
     @property
     def value(self):
         return self._value
 
     def draw(self, disp, screen_top):
+        top = self.top - screen_top
         if len(self._label) > 0:
-            disp.text(self._label, 8, self.top - screen_top + 2)
-        disp.rect(self._left, self.top - screen_top,
-                  self._width, self.height, 1)
-        disp.fill_rect(self._left + 2, self.top - screen_top + 2,
-                       self._bar_width,
-                       self.height - 4, 1)
-        if self._value / self._max_val * self._width > 30:
-            off = -35
-            colour = 0
-        else:
-            off = 5
-            colour = 1
-        disp.text(self._text,
-                  self._left + int(self._value / self._max_val * self._width) + off,
-                  self.top + int(self.height / 2) - 3 - screen_top, colour)
+            disp.text(self._label, 8, top + 2)
+        disp.rect(self._left, top, self._width, self.height, 1)
+        disp.fill_rect(self._bar_left, top + 2,
+                       self._bar_width, self.height - 4, 1)
+        disp.fill_rect(self._bar_left, top + 2,
+                       -self._bar_width, self.height + 2, 1)
+        if self._centered:
+            disp.line(self._middle, top + 1,
+                      self._middle, top + self._height - 2, 1)
+            disp.line(self._middle - 1, top + 1,
+                      self._middle - 1, top + self._height - 2, 1)
+            disp.line(self._middle + 1, top + 1,
+                      self._middle + 1, top + self._height - 2, 0)
+            disp.line(self._middle - 2, top + 1,
+                      self._middle - 2, top + self._height - 2, 0)
+        disp.text(self._text, self._txt_pos, top + self.height // 2 - 3,
+                  self._txt_colour)
 
     def key_prev(self):
-        if self._value > 0:
+        if self._value > self._min_val:
             self._value -= self._val_inc
-            if self._value < 0:
-                self._value = 0
+            if self._value < self._min_val:
+                self._value = self._min_val
             if self._on_change is not None:
                 self._on_change(self._value)
-                self._recalculate()
+                self._recalculate_bar()
             return True
         return False
 
@@ -342,7 +350,7 @@ class _Slider(_Element):
                 self._value = self._max_val
             if self._on_change is not None:
                 self._on_change(self._value)
-                self._recalculate()
+                self._recalculate_bar()
             return True
         return False
 
@@ -350,9 +358,29 @@ class _Slider(_Element):
         if self._on_focus is not None:
             self._on_focus()
 
-    def _recalculate(self):
+    def _recalculate_bar(self):
         if self._value == int(self._value):
             self._text = '%4s' % str(int(self._value))
         else:
             self._text = '%.1f' % self._value
-        self._bar_width = int(self._value / self._max_val * (self._width - 4))
+        if self._centered:
+            if self._value > 0:
+                self._bar_left = self._middle
+            else:
+                self._bar_left = self._middle - int(abs(self._value) /
+                                                    self._val_diff *
+                                                    (self._width - 4))
+            self._txt_colour = 1
+            self._txt_pos = self._left + 2 if self._value >= 0 else self._middle + 2
+        else:
+            self._bar_left = self._left + 2
+            if self._value / self._val_diff * self._width > 30:
+                off = -35
+                self._txt_colour = 0
+            else:
+                off = 5
+                self._txt_colour = 1
+            self._txt_pos = self._left + int(self._value / self._val_diff *
+                                             self._width) + off
+        self._bar_width = int(abs(self._value) / self._val_diff *
+                              (self._width - 4))

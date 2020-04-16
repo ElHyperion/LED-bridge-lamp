@@ -51,17 +51,13 @@ def key_pressed(key, count=0):
         else:
             PROGRAMS[Config.cur_program()].key_pressed(key, count)
     else:
-        print('ayy')
         if key == KEY_NEXT and Config.brightness() < 100:
-            print('next')
             Config.brightness(Config.brightness() + count * 2)
             PROGRAMS[Config.cur_program()].led_draw()
         elif key == KEY_PREV and Config.brightness() > 0:
-            print('prev')
             Config.brightness(Config.brightness() - count * 2)
             PROGRAMS[Config.cur_program()].led_draw()
         elif key == KEY_ENTER:
-            print('enter')
             Disp.enable(True)
             init_screen_timer()
 
@@ -103,7 +99,6 @@ async def led_draw():
             PROGRAMS[Config.cur_program()].led_draw()
             LED_BUILTIN.off()
 
-Config.load()
 init_screen_timer()
 LOOP = asyncio.get_event_loop()
 LOOP.create_task(enc_run())

@@ -1,4 +1,5 @@
 import json
+from constants import LED_COUNT
 
 
 class Config():
@@ -6,9 +7,12 @@ class Config():
         'curProgram': 0,
         'rgb': [255, 255, 255],
         'brightness': 50,
+        'width': LED_COUNT,
+        'offset': 0,
         'rate': 10
     }
     _unsaved = False
+    _loaded = False
 
     @classmethod
     def save(cls):
@@ -21,12 +25,16 @@ class Config():
     @classmethod
     def load(cls):
         try:
+            new_dict = {}
             with open('config.json') as file:
-                cls._dict = json.load(file)
+                new_dict = json.load(file)
+            cls._dict.update(new_dict)
+            cls._loaded = True
             return True
         except (OSError, ValueError):
             print('Cannot open config, generating a new configuration file...')
             cls._unsaved = True
+            cls._loaded = True
             cls.save()
             return False
 
@@ -35,6 +43,8 @@ class Config():
         if value is not None:
             cls._dict['curProgram'] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['curProgram']
 
     @classmethod
@@ -42,6 +52,8 @@ class Config():
         if value is not None:
             cls._dict['rgb'] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['rgb']
 
     @classmethod
@@ -49,6 +61,8 @@ class Config():
         if value is not None:
             cls._dict['rgb'][0] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['rgb'][0]
 
     @classmethod
@@ -56,6 +70,8 @@ class Config():
         if value is not None:
             cls._dict['rgb'][1] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['rgb'][1]
 
     @classmethod
@@ -63,6 +79,8 @@ class Config():
         if value is not None:
             cls._dict['rgb'][2] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['rgb'][2]
 
     @classmethod
@@ -77,8 +95,36 @@ class Config():
         return cls._dict['brightness']
 
     @classmethod
+    def width(cls, value=None):
+        if value is not None:
+            if value > LED_COUNT:
+                value = LED_COUNT
+            elif value < 0:
+                value = 0
+            cls._dict['width'] = int(value)
+            cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
+        return cls._dict['width']
+
+    @classmethod
+    def offset(cls, value=None):
+        if value is not None:
+            if value > LED_COUNT // 2:
+                value = LED_COUNT // 2
+            elif value < -LED_COUNT // 2:
+                value = -LED_COUNT // 2
+            cls._dict['offset'] = int(value)
+            cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
+        return cls._dict['offset']
+
+    @classmethod
     def rate(cls, value=None):
         if value is not None:
             cls._dict['rate'] = value
             cls._unsaved = True
+        elif not cls._loaded:
+            cls.load()
         return cls._dict['rate']
