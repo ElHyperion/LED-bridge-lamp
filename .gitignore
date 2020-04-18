@@ -1,4 +1,5 @@
 /*
 !fw/
 !fw-build/
+!fw-frozen/
 !.gitignore
