@@ -7,3 +7,8 @@ A project aimed at creating a firmware for controlling a LED bridge lamp with a 
 This project utilises the amazing [MicroPython](https://micropython.org/) embedded implementation of Python 3 for convenience and optimal performance (runs fine on a 252-LED long stripe). It also uses the uasyncio library by creating 3 separate threads for controlling the rotary encoder, OLED display and the LED stripe itself with maximum concurrency.
 
 Any configuration (such as changing PIN numbers or LED count) can be done conveniently by modifying the constants.py file.
+
+### Photos of my finished lamp and its control panel
+
+![Lamp from below](photos/lamp_from_below.jpg)
+![Control panel](photos/control_panel.jpg)
