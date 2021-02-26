@@ -1,5 +1,1 @@
-/*
-!fw/
-!fw-build/
-!fw-frozen/
-!.gitignore
+*.code-workspace
